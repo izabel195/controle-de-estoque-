@@ -1,0 +1,260 @@
+<<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Controle de Estoque - Kurma - Aero Pipa</title>
+  <style>
+    :root {
+      --azul-claro: #007BFF;
+      --azul-escuro: #0056b3;
+      --branco-transparente: rgba(255, 255, 255, 0.88);
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+      background: url("..//GM/WhatsApp Image 2025-06-06 at 14.52.34 (1).jpeg") no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--azul-escuro);
+      text-shadow: 1px 1px 3px white;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.4);
+      padding: 20px;
+      margin: 20px auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      max-width: 800px;
+      backdrop-filter: blur(5px);
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background: var(--azul-claro);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: var(--azul-escuro);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: center;
+      background-color: rgba(255, 255, 255, 0.85);
+    }
+
+    th {
+      background: var(--azul-claro);
+      color: white;
+    }
+
+    img {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 5px;
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 10px; }
+      .card { padding: 15px; }
+      table, th, td { font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Controle de Estoque - Kurma - Aero Pipa</h1>
+
+  <div class="card">
+    <h2>Cadastro de Produto</h2>
+    <label>Nome do Produto:</label>
+    <input type="text" id="nomeProduto">
+    <label>Categoria:</label>
+    <input type="text" id="categoriaProduto">
+    <label>Estoque Mínimo:</label>
+    <input type="number" id="estoqueMinimo">
+    <button onclick="cadastrarProduto()">Cadastrar Produto</button>
+  </div>
+
+  <div class="card">
+    <h2>Movimentar Produto</h2>
+    <label>Produto:</label>
+    <select id="produtoSelect"></select>
+    <label>Tipo:</label>
+    <select id="tipoMov">
+      <option value="Entrada">Entrada</option>
+      <option value="Saída">Saída</option>
+    </select>
+    <label>Quantidade:</label>
+    <input type="number" id="quantidade">
+    <button onclick="registrarMovimentacao()">Registrar Movimentação</button>
+  </div>
+
+  <div class="card">
+    <h2>Estoque Atual</h2>
+    <table id="estoqueTable">
+      <thead>
+        <tr>
+          
+          <th>Produto</th>
+          <th>Categoria</th>
+          <th>Estoque</th>
+          <th>Mínimo</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Histórico de Movimentações</h2>
+    <table id="historicoTable">
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Produto</th>
+          <th>Tipo</th>
+          <th>Quantidade</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    let produtos = [];
+    let movimentacoes = [];
+
+    function cadastrarProduto() {
+      const nome = document.getElementById('nomeProduto').value;
+      const categoria = document.getElementById('categoriaProduto').value;
+      const minimo = parseInt(document.getElementById('estoqueMinimo').value);
+
+      if (!nome || !categoria || isNaN(minimo)) {
+        return alert("Preencha todos os campos obrigatórios.");
+      }
+
+      produtos.push({ nome, categoria, estoque: 0, minimo });
+      atualizarProdutos();
+      atualizarEstoque();
+      alert("Produto cadastrado com sucesso!");
+    }
+
+    function atualizarProdutos() {
+      const select = document.getElementById('produtoSelect');
+      select.innerHTML = '';
+      produtos.forEach((p, i) => {
+        const option = document.createElement('option');
+        option.value = i;
+        option.text = p.nome;
+        select.appendChild(option);
+      });
+    }
+
+    function registrarMovimentacao() {
+      const idx = parseInt(document.getElementById('produtoSelect').value);
+      const tipo = document.getElementById('tipoMov').value;
+      const quantidade = parseInt(document.getElementById('quantidade').value);
+      const data = new Date().toLocaleString();
+
+      if (isNaN(quantidade) || quantidade <= 0) {
+        return alert("Informe uma quantidade válida.");
+      }
+
+      if (tipo === "Entrada") {
+        produtos[idx].estoque += quantidade;
+      } else {
+        if (produtos[idx].estoque < quantidade) {
+          return alert("Estoque insuficiente.");
+        }
+        produtos[idx].estoque -= quantidade;
+      }
+
+      movimentacoes.push({
+        data,
+        produto: produtos[idx].nome,
+        tipo,
+        quantidade
+      });
+
+      atualizarEstoque();
+      atualizarHistorico();
+    }
+
+    function atualizarEstoque() {
+      const tbody = document.getElementById('estoqueTable').querySelector('tbody');
+      tbody.innerHTML = '';
+      produtos.forEach((p, i) => {
+        const row = `<tr>
+      
+          <td>${p.nome}<br/><button onclick="excluirProduto(${i})">🗑️ Excluir</button></td>
+          <td>${p.categoria}</td>
+          <td style="color: ${p.estoque <= p.minimo ? 'red' : 'black'}">${p.estoque}</td>
+          <td>${p.minimo}</td>
+        </tr>`;
+        tbody.innerHTML += row;
+      });
+    }
+
+    function atualizarHistorico() {
+      const tbody = document.getElementById('historicoTable').querySelector('tbody');
+      tbody.innerHTML = '';
+      movimentacoes.forEach(m => {
+        const row = `<tr>
+          <td>${m.data}</td>
+          <td>${m.produto}</td>
+          <td>${m.tipo}</td>
+          <td>${m.quantidade}</td>
+        </tr>`;
+        tbody.innerHTML += row;
+      });
+    }
+
+    function excluirProduto(index) {
+      const confirmado = confirm(`Deseja realmente excluir o produto "${produtos[index].nome}"?`);
+      if (confirmado) {
+        produtos.splice(index, 1);
+        atualizarProdutos();
+        atualizarEstoque();
+        alert("Produto excluído com sucesso!");
+      }
+    }
+  </script>
+</body>
+</html>
+
